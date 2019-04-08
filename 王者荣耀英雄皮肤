@@ -1,0 +1,78 @@
+import os
+import requests
+import json
+
+
+def get_json_content():  # 解析json文件,提取数据
+    with open('herolist.json', 'r', encoding='utf-8') as ff:  # 解析json文件,得到英雄信息
+        mm = ff.read()
+        if mm.startswith(u'\ufeff'):
+            text = mm.encode('utf8')[3:].decode('utf8')
+    p = json.loads(text)
+    return p
+
+
+def get_hero_num(p):
+    url_list = []  # 存放各英雄的编号信息
+    for i in range(len(p)):  # 提取url的部分数据
+        url_list.append(p[i]['ename'])
+    return url_list
+
+
+def get_hero_name(p):
+    name_list = []  # 存放所有英雄的名称
+    for v in range(len(p)):
+        name_list.append(p[v]['cname'])
+    return name_list
+
+
+def get_skin_name(p):
+    skin_name = []  # 存放所有皮肤名字
+    for b in range(len(p)):
+        skin_name.append(p[b]['skin_name'])
+    return skin_name
+
+
+def create_catalog(name_list):  # 创建各英雄的文件目录
+    path1 = 'E:\study\爬虫\英雄皮肤' + '\\'
+    for z in range(len(name_list)):
+        os.mkdir(path1 + name_list[z])
+
+
+def download_pictures(vv):  # 下载图片到对应的目录中
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'}
+
+    url_picture = []
+    actual_list = get_hero_num(vv)  # 存放英雄编号的列表
+    create_catalog(get_hero_name(vv))  # 创建目录
+    # print(get_hero_name(vv))  # 获得英雄的名字,每个英雄只有一个名字!
+    # print(get_skin_name(vv))  # 获得所有皮肤信息的列表
+    for yy in range(len(get_hero_name(vv))):
+        rr = 1  # rr作用:为每个皮肤的url提供编号,如1,2,3
+        cc = actual_list[yy]
+        every_hero_skin_names = (get_skin_name(vv)[yy]).split('|')  # 是一个列表
+        separator_num = (get_skin_name(vv)[yy]).count('|')  # 存放分隔符的数量
+        skin_count = separator_num + 1  # 存放皮肤的数量
+        print('%d.英雄:%s  皮肤数量:%d' % (yy + 1, get_hero_name(vv)[yy], skin_count))
+        print(every_hero_skin_names)
+        print('------------------------------------------')
+        for i in range(skin_count):  # 存放有几个图片的名字,得到的是一个数字
+            url_picture.append('http://game.gtimg.cn/images/yxzj/img201606/skin/hero-info/' + str(cc) + '/' + str(
+                cc) + '-bigskin-' + str(rr) + '.jpg')
+            rr = rr + 1
+        pp = 0
+        for zz in url_picture:
+            req = requests.get(zz, headers=headers)
+            path = 'E:\\study\\爬虫\\英雄皮肤' + '\\' + get_hero_name(vv)[yy] + '\\' + every_hero_skin_names[1 * pp] + '.jpg'
+            with open(path, 'wb') as file1:
+                file1.write(req.content)
+            pp = pp + 1
+
+        url_picture = []
+    print('OK!')
+
+
+if __name__ == '__main__':
+    vv = get_json_content()
+    download_pictures(vv)
